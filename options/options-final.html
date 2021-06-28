@@ -1,0 +1,114 @@
+<!DOCTYPE html><html><head><title>章節挑戰</title><meta name="viewport" content="width=device-width, initial-scale=1"><link href="images/favicon.ico" rel="shortcut icon"><meta charset="UTF-8"><script src="/javascripts/vendor.js"></script><script src="https://cdnjs.cloudflare.com/ajax/libs/vue/3.0.2/vue.global.js"></script></head><body class="bg-lighter">
+<div class="container main my-5"><div class="row"><main class="col post">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/axios/0.21.1/axios.min.js"></script>
+<div id="app" class="mt-2">
+  <div class="row h-100">
+    <div class="col-md-3 h-100 d-flex flex-column">
+      <div class="form-floating mb-2">
+        <input type="text" class="form-control" id="search" placeholder="search" v-model="Search">
+        <label for="search">search</label>
+      </div>
+      <div class="list-group option">
+        <label class="list-group-item" v-for="(item,key) in filterSearch " :key="key" >
+          <input class="form-check-input me-1" type="radio" name="area" @click="tempArea(item)">
+          {{item.Name }} 
+        </label>
+      </div>
+    </div>
+    <div class="col-md-8 h-100 d-flex flex-column">
+      <div class="form-floating">
+        <select v-model="cacheArea" id="cacheArea" class="form-select w-50 mb-2" aria-label="select example">
+          <option selected value="" disabled>瀏覽紀錄</option>
+          <option :value="item" v-for="(item,key) in browseLog" :key="'browseLog'+key">{{item.Name}}</option>
+        </select>
+        <label for="cacheArea">瀏覽紀錄</label>
+        
+      </div>
+      <div class="card overflow-auto">
+        <div v-if="cacheArea.Name"> 
+        <img :src="cacheArea.Picture1" class="card-img-top" :alt="datastore.Name">
+        <iframe width="100%" height="300" frameborder="0" scrolling="no" marginheight="0" marginwidth="0"
+                :src=`https://maps.google.com.tw/maps?f=q&hl=zh-TW&geocode=&q=${cacheArea.Py},${cacheArea.Px}(${cacheArea.Name})&z=16&output=embed`></iframe>
+        <div class="card-body">
+          <h5 class="card-title">{{cacheArea.Name }}</h5>
+          <p>{{ cacheArea.Description }}</p>
+          <p v-if="cacheArea.Website"><a :href="cacheArea.Website" target="_blank">連接網址:{{cacheArea.Website}}</a></p>
+          
+        </div>
+        </div>
+        <div v-else class="card-body">
+          請選擇場域
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  
+const App = {
+  data() {
+    return {
+      datastore:[],
+      cacheArea: '',
+      Search: '',
+      browseLog: [],
+    };
+  },
+  methods: {
+    tempArea (item) {
+      this.cacheArea = item;
+      // console.log(this.cacheArea);
+      // console.log(this.cacheArea.Website)
+    }
+    },
+  computed:{
+    filterSearch () {
+        return this.datastore.filter((item) => item.Name.match(this.Search));
+      },
+      },
+
+  watch :{
+    cacheArea(n,o){
+
+      if(this.browseLog.length >= 10)
+      {
+        this.browseLog.shift();
+        this.browseLog.push(this.cacheArea);
+      }
+      else{
+        this.browseLog.push(this.cacheArea);
+      }
+      }
+    },
+
+  created() {
+    const apiUrl = "https://raw.githubusercontent.com/hexschool/KCGTravel/master/datastore_search.json";
+
+  axios
+  .get(apiUrl)
+  .then((res) => {
+    this.datastore = res.data.result.records;
+  })
+  .catch((error) => console.log(error));
+
+    }
+};
+
+Vue.createApp(App).mount('#app');
+</script>
+
+<style>
+#app {
+  height: 600px;
+}
+
+.option {
+  overflow-y: auto;
+}
+</style>
+
+<link rel="stylesheet" href="/stylesheets/all.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.1/css/all.min.css">
+</body>
+</html>
